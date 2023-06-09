@@ -76,14 +76,12 @@ public class TelegramBot extends TelegramWebhookBot {
 
     @Override
     public String getBotUsername() {
-        return "work_and_roll_bot";
-        // return configuration.getName();
+         return botName;
     }
 
     @Override
     public String getBotToken() {
-        return "6257314173:AAFphs9k_KzPCMFu1ibda9RcHjxKSltJQY8";
-        // return configuration.getKey();
+         return botKey;
     }
 
     public void sendAnswerMessage(SendMessage message) {

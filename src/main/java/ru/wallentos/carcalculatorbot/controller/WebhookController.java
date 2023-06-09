@@ -39,6 +39,7 @@ public class WebhookController {
     @GetMapping("/callback/update")
     public ResponseEntity<?> onReceivedUpdate222() {
         //updateProcessor.processUpdate(update);
+        System.out.println("вы попали в метод get callbackUpdate");
         return ResponseEntity.accepted().build();
     }
 }

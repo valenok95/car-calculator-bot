@@ -1,7 +1,7 @@
 bot:
   name: ${BOT_NAME}
   key: ${BOT_KEY}
-  uri: "https://mean-games-ask.loca.lt"
+  uri: ${BOT_URI}
 
 server:
   ssl:
