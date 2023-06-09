@@ -1,0 +1,22 @@
+bot:
+  name: ${BOT_NAME}
+  key: ${BOT_KEY}
+  uri: "https://mean-games-ask.loca.lt"
+
+server:
+  ssl:
+    enabled: false
+ru:
+  wallentos:
+    carworker:
+      manager-link: T.me/mikhail_ung
+      admin-id: 126866786
+      exchange-coefficient: ${COEFFICIENT}
+      extra-pay-corea:
+        krw: 2500000
+        rub: 70000
+      extra-pay-china:
+        cny: 2500000
+        rub: 70000
+      exchange-api:
+        host-cbr: https://www.cbr-xml-daily.ru/daily_json.js
