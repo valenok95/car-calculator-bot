@@ -16,6 +16,7 @@ public class ExecutionService {
     @Autowired
     public ExecutionService(RestService restService, ConfigDatapool configDatapool) {
         this.restService = restService;
+        restService.refreshExchangeRates();
         double rub = restService.getConversionRatesMap().get("RUB");
         restService.getConversionRatesMap().forEach((key, value) -> {
             ConfigDatapool.manualConversionRatesMapInRubles.put(key,
