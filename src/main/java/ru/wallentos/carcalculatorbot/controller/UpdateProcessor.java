@@ -322,7 +322,7 @@ public class UpdateProcessor {
                                                         CarPriceResultData resultData) {
         String firstMessage = String.format(Locale.FRANCE, """
                         #Инвойс - тачка дешевле 50к
-                        %,.0d KRW
+                        %,.0f KRW
                         %,.0f USD
                         %,.0f RUB
                         """, resultData.getPrice(), resultData.getFirstPriceInUsd(),
@@ -330,7 +330,7 @@ public class UpdateProcessor {
 
         String secondMessage = String.format(Locale.FRANCE, """
                         #Инвойс - тачка дешевле 50к
-                        %,.0d KRW
+                        %,.0f KRW
                         %,.0f USD
                         %,.0f RUB
                                                 
