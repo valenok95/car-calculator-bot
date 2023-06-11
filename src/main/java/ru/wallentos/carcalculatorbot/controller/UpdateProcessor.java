@@ -1,24 +1,22 @@
 package ru.wallentos.carcalculatorbot.controller;
 
-import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.CNY;
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.KRW;
-import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.NEW_CAR;
-import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.NORMAL_CAR;
-import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.OLD_CAR;
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.RESET_MESSAGE;
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.TO_SET_CURRENCY_MENU;
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.TO_START_MESSAGE;
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.USD;
+import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.manualConversionRatesMapInRubles;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -44,10 +42,10 @@ public class UpdateProcessor {
     @Autowired
     private RestService restService;
 
-
     public void registerBot(TelegramBot telegramBot) {
         this.telegramBot = telegramBot;
     }
+
     public void processUpdate(Update update) {
         if (Objects.isNull(update)) {
             log.error("received null update");
@@ -65,14 +63,7 @@ public class UpdateProcessor {
 
     private void processCallback(Update update) {
         String callbackData = update.getCallbackQuery().getData();
-        if (callbackData.equals(RESET_MESSAGE) || callbackData.equals(TO_START_MESSAGE)) {
-            startCommandReceived(update);
-            return;
-        }
-        if (callbackData.equals(TO_SET_CURRENCY_MENU)) {
-            setCurrencyCommandReceived(update);
-            return;
-        }
+        handleCallbackData(callbackData, update);
     }
 
     private void distributeMessagesByType(Update update) {
@@ -89,7 +80,7 @@ public class UpdateProcessor {
     }
 
     private void setUnsupportedMessageTypeView(Update update) {
-        var sendMessage = messageUtils.generateSendMessageWithText(update,
+        var sendMessage = messageUtils.generateSendMessageWithText(update.getMessage(),
                 "Неподдерживаемый тип сообщения!");
         setView(sendMessage);
     }
@@ -121,14 +112,11 @@ public class UpdateProcessor {
             case "/start":
                 startCommandReceived(update);
                 break;
-            case "/cbr":
-                cbrCommandReceived(update);
-                break;
             case "/currencyrates":
                 currencyRatesCommandReceived(update);
                 break;
             case "/settingservice":
-                setCurrencyCommandReceived(update);
+                setCurrencyCommandReceived(update.getMessage());
                 break;
             default:
                 handleMessage(receivedText, update);
@@ -137,67 +125,20 @@ public class UpdateProcessor {
     }
 
     private void startCommandReceived(Update update) {
+        processReadPrice(update);
         restService.refreshExchangeRates();
-        String message = String.format("""
-                Здравствуйте, %s!
-                        
-                Для расчета автомобиля из южной Кореи выберите KRW, для автомобиля из Китая CNY.
-                """, update.getMessage().getChat().getFirstName());
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-        List<InlineKeyboardButton> row = new ArrayList<>();
-        InlineKeyboardButton cnyButton = new InlineKeyboardButton(CNY);
-        InlineKeyboardButton krwButton = new InlineKeyboardButton(KRW);
-        cnyButton.setCallbackData(CNY);
-        krwButton.setCallbackData(KRW);
-        row.add(krwButton);
-        rows.add(row);
-        inlineKeyboardMarkup.setKeyboard(rows);
-        setView(messageUtils.generateSendMessageWithText(update, message, inlineKeyboardMarkup));
-        cache.setUsersCurrentBotState(update.getMessage().getChatId(), BotState.ASK_CURRENCY);
-    }
-
-    private void cbrCommandReceived(Update update) {
-        restService.refreshExchangeRates();
-        Map<String, Double> rates = restService.getConversionRatesMap();
-        String message = """
-                Курс валют ЦБ:
-                                
-                EUR %,.4fруб.
-                USD %,.4fруб.
-                CNY %,.4fруб.
-                KRW %,.4fруб.
-                                
-                """.formatted(rates.get("RUB"),
-                rates.get("RUB") / rates.get("USD"),
-                rates.get("RUB") / rates.get("CNY"),
-                rates.get("RUB") / rates.get("KRW"));
-
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-        List<InlineKeyboardButton> row1 = new ArrayList<>();
-        InlineKeyboardButton reset = new InlineKeyboardButton(TO_START_MESSAGE);
-        reset.setCallbackData(TO_START_MESSAGE);
-        row1.add(reset);
-        rows.add(row1);
-        inlineKeyboardMarkup.setKeyboard(rows);
-        setView(messageUtils.generateSendMessageWithText(update, message,
-                inlineKeyboardMarkup));
     }
 
     private void currencyRatesCommandReceived(Update update) {
-        //TO DO вынести в отдельный метод String get
         String message = String.format("""
                         Актуальный курс оплаты:
                                                     
                         KRW = %,.4f RUB
-                        CNY = %,.4f RUB
                         USD = %,.4f RUB
                         USD = %,.2f KRW
                             
                             """,
                 ConfigDatapool.manualConversionRatesMapInRubles.get(KRW),
-                ConfigDatapool.manualConversionRatesMapInRubles.get(CNY),
                 ConfigDatapool.manualConversionRatesMapInRubles.get(USD),
                 restService.getCbrUsdKrwMinus20());
 
@@ -209,40 +150,68 @@ public class UpdateProcessor {
         row1.add(reset);
         rows.add(row1);
         inlineKeyboardMarkup.setKeyboard(rows);
-
-        setView(messageUtils.generateSendMessageWithText(update, message, inlineKeyboardMarkup));
+        setView(messageUtils.generateSendMessageWithText(update.getMessage(), message, inlineKeyboardMarkup));
+        restService.refreshExchangeRates();
     }
 
-    private void setCurrencyCommandReceived(Update update) {
+    private void setCurrencyCommandReceived(Message message) {
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         List<InlineKeyboardButton> row = new ArrayList<>();
-        InlineKeyboardButton cnyButton = new InlineKeyboardButton(CNY);
         InlineKeyboardButton usdButton = new InlineKeyboardButton(USD);
         InlineKeyboardButton krwButton = new InlineKeyboardButton(KRW);
         usdButton.setCallbackData(USD);
-        cnyButton.setCallbackData(CNY);
         krwButton.setCallbackData(KRW);
         row.add(usdButton);
         row.add(krwButton);
         rows.add(row);
         inlineKeyboardMarkup.setKeyboard(rows);
-        String message;
-        message = String.format("""
+        String text = String.format("""
                         Актуальный курс оплаты:
                                                     
                         KRW = %,.4f
-                        CNY = %,.4f
                         USD = %,.4f
+                        USD/KRW = %,.2f
                             
                         Выберите валюту для ручной установки курса:
                             """,
                 ConfigDatapool.manualConversionRatesMapInRubles.get(KRW),
-                ConfigDatapool.manualConversionRatesMapInRubles.get(CNY),
-                ConfigDatapool.manualConversionRatesMapInRubles.get(USD));
+                ConfigDatapool.manualConversionRatesMapInRubles.get(USD),
+                restService.getCbrUsdKrwMinus20());
 
-        setView(messageUtils.generateSendMessageWithText(update, message, inlineKeyboardMarkup));
-        cache.setUsersCurrentBotState(update.getMessage().getChatId(), BotState.SET_CURRENCY_MENU);
+        setView(messageUtils.generateSendMessageWithText(message, text, inlineKeyboardMarkup));
+        cache.setUsersCurrentBotState(message.getChatId(), BotState.SET_CURRENCY_MENU);
+    }
+
+    private void handleCallbackData(String callbackData, Update update) {
+        long chatId = update.getCallbackQuery().getMessage().getChatId();
+        BotState currentState = cache.getUsersCurrentBotState(chatId);
+        switch (callbackData) {
+            case TO_START_MESSAGE:
+            case RESET_MESSAGE:
+                startCommandReceived(update);
+                return;
+            case TO_SET_CURRENCY_MENU:
+                setCurrencyCommandReceived(update.getCallbackQuery().getMessage());
+                return;
+        }
+        try {
+            switch (currentState) {
+                case ASK_CURRENCY:
+                    processReadPrice(update);
+                    break;
+                case SET_CURRENCY_MENU:
+                    processChooseCurrencyToSet(update, callbackData);
+                    break;
+                default:
+                    break;
+            }
+        } catch (IllegalArgumentException e) {
+            setView(messageUtils.generateSendMessageWithText(update.getCallbackQuery().getMessage(),
+                    "Некорректный формат " +
+                            "данных, " +
+                            "попробуйте ещё раз."));
+        }
     }
 
     private void handleMessage(String receivedText, Update update) {
@@ -250,20 +219,8 @@ public class UpdateProcessor {
         BotState currentState = cache.getUsersCurrentBotState(chatId);
         try {
             switch (currentState) {
-                case ASK_CURRENCY:
-                    processCurrency(update, receivedText);
-                    break;
                 case ASK_PRICE:
                     processPrice(update, receivedText);
-                    break;
-                case ASK_ISSUE_DATE:
-                    processIssueDate(update, receivedText);
-                    break;
-                case ASK_VOLUME:
-                    processVolume(update, receivedText);
-                    break;
-                case SET_CURRENCY_MENU:
-                    processChooseCurrencyToSet(update, receivedText);
                     break;
                 case SET_CURRENCY:
                     processSetCurrency(update, receivedText);
@@ -272,9 +229,9 @@ public class UpdateProcessor {
                     break;
             }
         } catch (IllegalArgumentException e) {
-            setView(messageUtils.generateSendMessageWithText(update, "Некорректный формат данных, " +
+            setView(messageUtils.generateSendMessageWithText(update.getMessage(), "Некорректный формат " +
+                    "данных, " +
                     "попробуйте ещё раз."));
-            return;
         }
     }
 
@@ -299,8 +256,9 @@ public class UpdateProcessor {
         inlineKeyboardMarkup.setKeyboard(rows);
 
         String message = String.format("Установлен курс: 1 %s = %s RUB", currency, receivedText);
-        setView(messageUtils.generateSendMessageWithText(update, message, inlineKeyboardMarkup));
+        setView(messageUtils.generateSendMessageWithText(update.getMessage(), message, inlineKeyboardMarkup));
         cache.deleteUserCarDataByUserId(chatId);
+        restService.refreshExchangeRates();
     }
 
     private void processPrice(Update update, String receivedText) {
@@ -308,78 +266,43 @@ public class UpdateProcessor {
         UserCarInputData data = cache.getUserCarData(chatId);
         int priceInCurrency = Integer.parseInt(receivedText);
         data.setPrice(priceInCurrency);
-        data.setPriceInEuro(executionService.convertMoneyToEuro(priceInCurrency, data.getCurrency()));
         cache.saveUserCarData(chatId, data);
-        cache.setUsersCurrentBotState(chatId, BotState.ASK_ISSUE_DATE);
-        String text = "Выберите возраст автомобиля:";
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-        List<InlineKeyboardButton> row = new ArrayList<>();
-        InlineKeyboardButton newCar = new InlineKeyboardButton(NEW_CAR);
-        InlineKeyboardButton normalCar = new InlineKeyboardButton(NORMAL_CAR);
-        InlineKeyboardButton oldCar = new InlineKeyboardButton(OLD_CAR);
-        newCar.setCallbackData(NEW_CAR);
-        normalCar.setCallbackData(NORMAL_CAR);
-        oldCar.setCallbackData(OLD_CAR);
-        row.add(newCar);
-        row.add(normalCar);
-        row.add(oldCar);
-        rows.add(row);
-        inlineKeyboardMarkup.setKeyboard(rows);
-        setView(messageUtils.generateSendMessageWithText(update, text, inlineKeyboardMarkup));
-    }
-
-    private void processIssueDate(Update update, String receivedText) {
-        long chatId = update.getMessage().getChatId();
-        UserCarInputData data = cache.getUserCarData(chatId);
-        data.setAge(receivedText);
-        cache.saveUserCarData(chatId, data);
-        cache.setUsersCurrentBotState(chatId, BotState.ASK_VOLUME);
-        String text = """
-                Введите объем двигателя в кубических сантиметрах.
-                                
-                Пример: 1995""";
-
-        setView(messageUtils.generateSendMessageWithText(update, text));
-    }
-
-    private void processVolume(Update update, String receivedText) {
-        long chatId = update.getMessage().getChatId();
-        UserCarInputData data = cache.getUserCarData(chatId);
-        data.setVolume(Integer.parseInt(receivedText));
-        cache.saveUserCarData(chatId, data);
-        cache.setUsersCurrentBotState(chatId, BotState.DATA_PREPARED);
-        String text = String.format("""
-                Данные переданы в обработку ⏳
-                 
-                %s
-                """, data);
-        setView(messageUtils.generateSendMessageWithText(update, text));
-        processExecuteResult(data, update);
-    }
-
-    private void processExecuteResult(UserCarInputData data, Update update) {
-        long chatId = update.getMessage().getChatId();
         CarPriceResultData resultData = executionService.executeCarPriceResultData(data);
         cache.deleteUserCarDataByUserId(chatId);
-        log.info("""
-                        Данные рассчёта:
-                        First price in rubles {},
-                        Extra pay amount RUB {},
-                        Extra pay amount curr {},
-                        Extra pay amount {},
-                        Fee rate {},
-                        Duty {},
-                        Recycling fee {}
-                        """, resultData.getFirstPriceInRubles(), resultData.getExtraPayAmountInRubles(),
-                resultData.getExtraPayAmountInCurrency(), resultData.getExtraPayAmount(),
-                resultData.getFeeRate(), resultData.getDuty(), resultData.getRecyclingFee());
-        String text;
-        text = String.format("""
-                %s
-                        
-                Что бы заказать авто - пиши менеджеру🔻
-                        """, resultData);
+        if (resultData.isSanctionCar()) {
+            processShowResultForNormalConvertation(update, resultData);
+        } else {
+            processShowResultForDoubleConvertation(update, resultData);
+        }
+    }
+
+    private void processShowResultForNormalConvertation(Update update, CarPriceResultData resultData) {
+        String firstMessage = String.format(Locale.FRANCE, """
+                        #Наличные - тачка дороже 50к
+                        %,.0f KRW
+                        %,.0f RUB
+                        """,
+                resultData.getPrice(),
+                resultData.getFirstPriceInRubles());
+        String secondMessage = String.format(Locale.FRANCE, """
+                        #Наличные - тачка дороже 50к
+                        %,.0f KRW
+                        %,.0f RUB
+                                                
+                        Рубль/Крипта %,.0f RUB
+                        Комиссия %,.0f 
+                        KRW/RUB %,.4f RUB
+                        KRW/RUB (себес) %,.4f
+                                                
+                        """,
+                resultData.getPrice(),
+                resultData.getFirstPriceInRubles(),
+                resultData.getFirstPriceInRubles() * 0.99,
+                resultData.getFirstPriceInRubles() * 0.01,
+                manualConversionRatesMapInRubles.get(KRW),
+                manualConversionRatesMapInRubles.get(KRW) * 0.99);
+
+
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
         List<InlineKeyboardButton> row2 = new ArrayList<>();
@@ -388,29 +311,81 @@ public class UpdateProcessor {
         row2.add(reset);
         rows.add(row2);
         inlineKeyboardMarkup.setKeyboard(rows);
-        setView(messageUtils.generateSendMessageWithText(update, text, inlineKeyboardMarkup));
+        setView(messageUtils.generateSendMessageWithText(update.getMessage(),
+                firstMessage));
+        setView(messageUtils.generateSendMessageWithText(update.getMessage(),
+                secondMessage,
+                inlineKeyboardMarkup));
     }
 
+    private void processShowResultForDoubleConvertation(Update update,
+                                                        CarPriceResultData resultData) {
+        String firstMessage = String.format(Locale.FRANCE, """
+                        #Инвойс - тачка дешевле 50к
+                        %,.0d KRW
+                        %,.0f USD
+                        %,.0f RUB
+                        """, resultData.getPrice(), resultData.getFirstPriceInUsd(),
+                resultData.getFirstPriceInRubles());
 
-    private void processCurrency(Update update, String currency) {
-        long chatId = update.getMessage().getChatId();
+        String secondMessage = String.format(Locale.FRANCE, """
+                        #Инвойс - тачка дешевле 50к
+                        %,.0d KRW
+                        %,.0f USD
+                        %,.0f RUB
+                                                
+                        Рубль/Крипта %,.0f RUB
+                        Комиссия %,.0f 
+                        KRW/USD %,.2f RUB
+                        USD/RUB %,.4f RUB
+                        USD/RUB (себес) %,.4f
+                        """,
+                resultData.getPrice(), resultData.getFirstPriceInUsd(),
+                resultData.getFirstPriceInRubles(),
+                resultData.getFirstPriceInRubles() * 0.99,
+                resultData.getFirstPriceInRubles() * 0.01,
+                restService.getCbrUsdKrwMinus20(),
+                manualConversionRatesMapInRubles.get(USD),
+                manualConversionRatesMapInRubles.get(USD) * 0.99);
+
+
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
+        List<InlineKeyboardButton> row2 = new ArrayList<>();
+        InlineKeyboardButton reset = new InlineKeyboardButton(RESET_MESSAGE);
+        reset.setCallbackData(RESET_MESSAGE);
+        row2.add(reset);
+        rows.add(row2);
+        inlineKeyboardMarkup.setKeyboard(rows);
+        setView(messageUtils.generateSendMessageWithText(update.getMessage(),
+                firstMessage));
+        setView(messageUtils.generateSendMessageWithText(update.getMessage(),
+                secondMessage,
+                inlineKeyboardMarkup));
+    }
+
+    /**
+     * стартовый процесс
+     */
+    private void processReadPrice(Update update) {
+        Message message = update.hasCallbackQuery() ? update.getCallbackQuery().getMessage() :
+                update.getMessage();
+
+        long chatId = message.getChatId();
         UserCarInputData data = cache.getUserCarData(chatId);
-        data.setCurrency(currency);
-        data.setStock(executionService.executeStock(currency));
         cache.saveUserCarData(chatId, data);
         String text =
                 String.format("""
-                                Тип валюты: %s 
-                                                                
-                                Теперь введите стоимость автомобиля в валюте.
-                                """
-                        , currency);
-        setView(messageUtils.generateEditMessageText(text, update));
+                        Тип валюты: KRW
+                                                        
+                        Теперь введите стоимость автомобиля в валюте.
+                        """);
+        setView(messageUtils.generateSendMessageWithText(message, text));
         cache.setUsersCurrentBotState(chatId, BotState.ASK_PRICE);
     }
 
     private void processChooseCurrencyToSet(Update update, String currency) {
-        long chatId = update.getMessage().getChatId();
+        long chatId = update.getCallbackQuery().getMessage().getChatId();
         String text =
                 String.format("""
                                 Вы выбрали тип валюты: %s 
@@ -421,12 +396,10 @@ public class UpdateProcessor {
                                 В таком случае будет установлен курс 1 %s = 1.234 RUB
                                 """
                         , currency, currency);
-        setView(messageUtils.generateEditMessageText(text, update));
+        setView(messageUtils.generateEditMessageText(text, update.getCallbackQuery().getMessage()));
         UserCarInputData data = cache.getUserCarData(chatId);
         data.setCurrency(currency);
         cache.saveUserCarData(chatId, data);
         cache.setUsersCurrentBotState(chatId, BotState.SET_CURRENCY);
     }
-
-
 }

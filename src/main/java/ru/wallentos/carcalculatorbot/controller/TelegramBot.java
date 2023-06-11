@@ -38,28 +38,14 @@ public class TelegramBot extends TelegramWebhookBot {
         this.updateProcessor = updateProcessor;
         List<BotCommand> listofCommands = new ArrayList<>();
         listofCommands.add(new BotCommand("/start", "Старт"));
-        listofCommands.add(new BotCommand("/cbr", "курс ЦБ"));
         listofCommands.add(new BotCommand("/currencyrates", "Актуальный курс оплаты"));
+        listofCommands.add(new BotCommand("/settingservice", "Сервис"));
         try {
             this.execute(new SetMyCommands(listofCommands, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
             log.error("Error setting bot's command list: " + e.getMessage());
         }
     }
-
-/*
-    @PostConstruct
-    public void init() {
-        updateProcessor.registerBot(this);
-        try {
-            var setWebhook = SetWebhook.builder().url(botUri).build();
-            this.setWebhook(setWebhook);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
-    }
-*/
-
 
     @PostConstruct
     public void init() {
