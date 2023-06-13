@@ -278,21 +278,23 @@ public class UpdateProcessor {
 
     private void processShowResultForNormalConvertation(Update update, CarPriceResultData resultData) {
         String firstMessage = String.format(Locale.FRANCE, """
-                        #Наличные - тачка дороже 50к
-                        %,.0f KRW
-                        %,.0f RUB
+                        #Наличные
+                        
+                        %,.0f ₩
+                        %,.0f ₽
                         """,
                 resultData.getPrice(),
                 resultData.getFirstPriceInRubles());
         String secondMessage = String.format(Locale.FRANCE, """
-                        #Наличные - тачка дороже 50к
-                        %,.0f KRW
-                        %,.0f RUB
+                        #Наличные
+                        
+                        %,.0f ₩
+                        %,.0f ₽
                                                 
-                        Рубль/Крипта %,.0f RUB
-                        Комиссия %,.0f 
-                        KRW/RUB %,.4f RUB
-                        KRW/RUB (себес) %,.4f
+                        Рубль/Крипта %,.0f ₽
+                        Комиссия %,.0f ₽
+                        KRW/RUB %,.4f ₽
+                        KRW/RUB (себес) %,.4f ₽
                                                 
                         """,
                 resultData.getPrice(),
@@ -321,24 +323,26 @@ public class UpdateProcessor {
     private void processShowResultForDoubleConvertation(Update update,
                                                         CarPriceResultData resultData) {
         String firstMessage = String.format(Locale.FRANCE, """
-                        #Инвойс - тачка дешевле 50к
-                        %,.0f KRW
-                        %,.0f USD
-                        %,.0f RUB
+                        #Инвойс
+                        
+                        %,.0f ₩
+                        %,.0f $
+                        %,.0f ₽
                         """, resultData.getPrice(), resultData.getFirstPriceInUsd(),
                 resultData.getFirstPriceInRubles());
 
         String secondMessage = String.format(Locale.FRANCE, """
-                        #Инвойс - тачка дешевле 50к
-                        %,.0f KRW
-                        %,.0f USD
-                        %,.0f RUB
+                        #Инвойс
+                        
+                        %,.0f ₩
+                        %,.0f $
+                        %,.0f ₽
                                                 
-                        Рубль/Крипта %,.0f RUB
-                        Комиссия %,.0f 
-                        KRW/USD %,.2f RUB
-                        USD/RUB %,.4f RUB
-                        USD/RUB (себес) %,.4f
+                        Рубль/Крипта %,.0f ₽
+                        Комиссия %,.0f ₽
+                        KRW/USD %,.2f ₩
+                        USD/RUB %,.4f ₽
+                        USD/RUB (себес) %,.4f ₽
                         """,
                 resultData.getPrice(), resultData.getFirstPriceInUsd(),
                 resultData.getFirstPriceInRubles(),
