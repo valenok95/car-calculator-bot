@@ -281,7 +281,7 @@ public class UpdateProcessor {
                         #Наличные
                         
                         %,.0f ₩
-                        %,.0f ₽
+                        К оплате: %,.0f ₽
                         """,
                 resultData.getPrice(),
                 resultData.getFirstPriceInRubles());
@@ -327,7 +327,7 @@ public class UpdateProcessor {
                         
                         %,.0f ₩
                         %,.0f $
-                        %,.0f ₽
+                        К оплате: %,.0f ₽
                         """, resultData.getPrice(), resultData.getFirstPriceInUsd(),
                 resultData.getFirstPriceInRubles());
 
