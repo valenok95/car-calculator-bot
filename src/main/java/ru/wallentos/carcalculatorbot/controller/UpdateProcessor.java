@@ -61,6 +61,13 @@ public class UpdateProcessor {
         }
     }
 
+    public String processGoogle() {
+        String CREDENTIALS_FILE_PATH = "/credentials.json";
+        var in = UpdateProcessor.class.getResource(CREDENTIALS_FILE_PATH).getPath();
+        log.info(in);
+        return in;
+    }
+
     private void processCallback(Update update) {
         String callbackData = update.getCallbackQuery().getData();
         handleCallbackData(callbackData, update);
@@ -279,7 +286,7 @@ public class UpdateProcessor {
     private void processShowResultForNormalConvertation(Update update, CarPriceResultData resultData) {
         String firstMessage = String.format(Locale.FRANCE, """
                         #Наличные
-                        
+                                                
                         %,.0f ₩
                         К оплате: %,.0f ₽
                         """,
@@ -287,7 +294,7 @@ public class UpdateProcessor {
                 resultData.getFirstPriceInRubles());
         String secondMessage = String.format(Locale.FRANCE, """
                         #Наличные
-                        
+                                                
                         %,.0f ₩
                         %,.0f ₽
                                                 
@@ -324,7 +331,7 @@ public class UpdateProcessor {
                                                         CarPriceResultData resultData) {
         String firstMessage = String.format(Locale.FRANCE, """
                         #Инвойс
-                        
+                                                
                         %,.0f ₩
                         %,.0f $
                         К оплате: %,.0f ₽
@@ -333,7 +340,7 @@ public class UpdateProcessor {
 
         String secondMessage = String.format(Locale.FRANCE, """
                         #Инвойс
-                        
+                                                
                         %,.0f ₩
                         %,.0f $
                         %,.0f ₽
