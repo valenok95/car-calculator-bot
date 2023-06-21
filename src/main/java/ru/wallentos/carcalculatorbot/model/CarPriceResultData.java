@@ -7,8 +7,11 @@ import lombok.experimental.FieldDefaults;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CarPriceResultData {
-    double price;
-    double firstPriceInUsd;
-    double firstPriceInRubles;
-    boolean isSanctionCar;
+    private double price;
+    private double firstPriceInUsd;
+    private double firstPriceInRubles;
+    private double rubleCrypto;
+    private double fee;
+    private boolean isSanctionCar;
+    private String paymentType;
 }

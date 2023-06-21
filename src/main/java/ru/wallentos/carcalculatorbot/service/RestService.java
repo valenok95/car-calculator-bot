@@ -15,9 +15,9 @@ import org.springframework.web.client.RestTemplate;
 @Data
 @Slf4j
 public class RestService {
-    @Value("${ru.wallentos.carworker.exchange-api.host-cbr}")
+    @Value("${ru.wallentos.car-calculator.exchange-api.host-cbr}")
     private String cbrMethod;
-    @Value("${ru.wallentos.carworker.exchange-api.host-naver}")
+    @Value("${ru.wallentos.car-calculator.exchange-api.host-naver}")
     private String naverMethod;
     private RestTemplate restTemplate;
 

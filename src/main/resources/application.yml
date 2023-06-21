@@ -1,7 +1,7 @@
 bot:
   name: ${BOT_NAME}
   key: ${BOT_KEY}
-  uri: https://purple-months-wave.loca.lt
+  uri: ${BOT_URI}
 
 server:
   ssl:
@@ -9,9 +9,9 @@ server:
   port : 8080
 ru:
   wallentos:
-    carworker:
+    car-calculator:
+      log-spreedsheed-id: ${LOG_SPREEDSHEED_ID}
       admin-id: 126866786
-      exchange-coefficient: ${COEFFICIENT}
       extra-pay-corea:
         krw: 2500000
         rub: 70000

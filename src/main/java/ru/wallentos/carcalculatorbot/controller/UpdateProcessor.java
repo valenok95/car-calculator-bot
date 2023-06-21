@@ -7,7 +7,10 @@ import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.TO_STAR
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.USD;
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.manualConversionRatesMapInRubles;
 
+import com.google.api.services.sheets.v4.model.AppendValuesResponse;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -26,6 +29,7 @@ import ru.wallentos.carcalculatorbot.model.BotState;
 import ru.wallentos.carcalculatorbot.model.CarPriceResultData;
 import ru.wallentos.carcalculatorbot.model.UserCarInputData;
 import ru.wallentos.carcalculatorbot.service.ExecutionService;
+import ru.wallentos.carcalculatorbot.service.GoogleService;
 import ru.wallentos.carcalculatorbot.service.RestService;
 import ru.wallentos.carcalculatorbot.utils.MessageUtils;
 
@@ -41,6 +45,8 @@ public class UpdateProcessor {
     private UserDataCache cache;
     @Autowired
     private RestService restService;
+    @Autowired
+    private GoogleService googleService;
 
     public void registerBot(TelegramBot telegramBot) {
         this.telegramBot = telegramBot;
@@ -61,7 +67,8 @@ public class UpdateProcessor {
         }
     }
 
-    public String processGoogle() {
+    public String processGoogle(){
+
         String CREDENTIALS_FILE_PATH = "/credentials.json";
         var in = UpdateProcessor.class.getResource(CREDENTIALS_FILE_PATH).getPath();
         log.info(in);
@@ -285,15 +292,15 @@ public class UpdateProcessor {
 
     private void processShowResultForNormalConvertation(Update update, CarPriceResultData resultData) {
         String firstMessage = String.format(Locale.FRANCE, """
-                        #Наличные
+                        #%s
                                                 
                         %,.0f ₩
                         К оплате: %,.0f ₽
-                        """,
+                        """, resultData.getPaymentType(),
                 resultData.getPrice(),
                 resultData.getFirstPriceInRubles());
         String secondMessage = String.format(Locale.FRANCE, """
-                        #Наличные
+                        #%s
                                                 
                         %,.0f ₩
                         %,.0f ₽
@@ -303,7 +310,7 @@ public class UpdateProcessor {
                         KRW/RUB %,.4f ₽
                         KRW/RUB (себес) %,.4f ₽
                                                 
-                        """,
+                        """,resultData.getPaymentType(),
                 resultData.getPrice(),
                 resultData.getFirstPriceInRubles(),
                 resultData.getFirstPriceInRubles() * 0.99,
@@ -330,16 +337,16 @@ public class UpdateProcessor {
     private void processShowResultForDoubleConvertation(Update update,
                                                         CarPriceResultData resultData) {
         String firstMessage = String.format(Locale.FRANCE, """
-                        #Инвойс
+                        #%s
                                                 
                         %,.0f ₩
                         %,.0f $
                         К оплате: %,.0f ₽
-                        """, resultData.getPrice(), resultData.getFirstPriceInUsd(),
+                        """,resultData.getPaymentType(), resultData.getPrice(), resultData.getFirstPriceInUsd(),
                 resultData.getFirstPriceInRubles());
 
         String secondMessage = String.format(Locale.FRANCE, """
-                        #Инвойс
+                        #%s
                                                 
                         %,.0f ₩
                         %,.0f $
@@ -350,11 +357,11 @@ public class UpdateProcessor {
                         KRW/USD %,.2f ₩
                         USD/RUB %,.4f ₽
                         USD/RUB (себес) %,.4f ₽
-                        """,
+                        """,resultData.getPaymentType(),
                 resultData.getPrice(), resultData.getFirstPriceInUsd(),
                 resultData.getFirstPriceInRubles(),
-                resultData.getFirstPriceInRubles() * 0.99,
-                resultData.getFirstPriceInRubles() * 0.01,
+                resultData.getRubleCrypto(),
+                resultData.getFee(),
                 restService.getCbrUsdKrwMinus20(),
                 manualConversionRatesMapInRubles.get(USD),
                 manualConversionRatesMapInRubles.get(USD) * 0.99);

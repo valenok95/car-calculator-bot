@@ -14,8 +14,8 @@ public class ConfigDatapool {
     public static final String USD = "USD";
     public static final String KRW = "KRW";
     public static final String CNY = "CNY";
-    @Value("${ru.wallentos.carworker.exchange-coefficient}")
-    public double coefficient;
+    @Value("${ru.wallentos.car-calculator.log-spreedsheed-id}")
+    public String logSpreedSheetId;
     public static Map<String, Double> manualConversionRatesMapInRubles = new HashMap<>();
     public static final String RESET_MESSAGE = "Рассчитать ещё один автомобиль";
     public static final String TO_START_MESSAGE = "Рассчитать автомобиль";
