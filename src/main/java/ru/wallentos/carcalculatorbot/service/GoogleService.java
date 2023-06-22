@@ -61,8 +61,8 @@ public class GoogleService {
         try {
             // Gets the values of the cells in the specified range.
             result = sheets.spreadsheets().values().get(spreadsheetId,"B1:B").execute();
-            int numRows = result.size();
-            return Integer.parseInt(result.getValues().get(numRows).get(0).toString());
+            int numRows = result.getValues().size();
+            return Integer.parseInt(result.getValues().get(numRows-1).get(0).toString());
         } catch (GoogleJsonResponseException e) {
             // TODO(developer) - handle error appropriately
             GoogleJsonError error = e.getDetails();

@@ -76,8 +76,7 @@ public class ExecutionService {
                                 carPriceResultData.getFirstPriceInUsd(),
                                 carPriceResultData.getFirstPriceInRubles(), carPriceResultData.getRubleCrypto(),
                                 manualConversionRatesMapInRubles.get(KRW), carPriceResultData.getFee(),
-                                "KOREX", carPriceResultData.getPaymentType(),
-                                "Наличные"));
+                                "KOREX", "", carPriceResultData.getPaymentType()));
         try {
             //  googleService.getValues(configDatapool.getLogSpreedsheetId());
             googleService.appendValues(configDatapool.getLogSpreedSheetId(), "A1:L1", "USER_ENTERED",
