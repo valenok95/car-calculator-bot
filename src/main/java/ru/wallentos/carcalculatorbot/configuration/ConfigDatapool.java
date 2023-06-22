@@ -17,8 +17,8 @@ public class ConfigDatapool {
     @Value("${ru.wallentos.car-calculator.log-spreedsheed-id}")
     public String logSpreedSheetId;
     public static Map<String, Double> manualConversionRatesMapInRubles = new HashMap<>();
-    public static final String RESET_MESSAGE = "Рассчитать ещё один автомобиль";
-    public static final String TO_START_MESSAGE = "Рассчитать автомобиль";
+    public static final String RESET_MESSAGE = "Расчёт платежа";
+    public static final String TO_START_MESSAGE = "Расчёт платежа";
     public static final String TO_SET_CURRENCY_MENU = "Меню установки валюты";
     public static final String MANAGER_MESSAGE = "Связаться с менеджером";
 

@@ -26,7 +26,6 @@ public class GoogleService {
      * Returns a range of values from a spreadsheet.
      *
      * @param spreadsheetId - Id of the spreadsheet.
-     * @param range         - Range of cells of the spreadsheet.
      * @return Values in the range
      * @throws IOException - if credentials file not found.
      */
@@ -34,7 +33,7 @@ public class GoogleService {
         ValueRange result = null;
         try {
             // Gets the values of the cells in the specified range.
-            sheets.spreadsheets().get(spreadsheetId).execute();
+            var res = sheets.spreadsheets().get(spreadsheetId).execute();
             int numRows = result.getValues() != null ? result.getValues().size() : 0;
             System.out.printf("%d rows retrieved.", numRows);
         } catch (GoogleJsonResponseException e) {
@@ -46,7 +45,7 @@ public class GoogleService {
                 throw e;
             }
         }
-        return null;
+        return result;
     }
     
     /**
@@ -60,9 +59,9 @@ public class GoogleService {
         ValueRange result = null;
         try {
             // Gets the values of the cells in the specified range.
-            result = sheets.spreadsheets().values().get(spreadsheetId,"B1:B").execute();
+            result = sheets.spreadsheets().values().get(spreadsheetId,"Заявки в Корею!B1:B").execute();
             int numRows = result.getValues().size();
-            return Integer.parseInt(result.getValues().get(numRows-1).get(0).toString());
+            return Integer.parseInt(result.getValues().get(numRows-1).get(0).toString().substring(1));
         } catch (GoogleJsonResponseException e) {
             // TODO(developer) - handle error appropriately
             GoogleJsonError error = e.getDetails();

@@ -10,6 +10,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.wallentos.carcalculatorbot.configuration.ConfigDatapool;
@@ -17,6 +18,7 @@ import ru.wallentos.carcalculatorbot.model.CarPriceResultData;
 import ru.wallentos.carcalculatorbot.model.UserCarInputData;
 
 @Service
+@Slf4j
 public class ExecutionService {
     private RestService restService;
     private GoogleService googleService;
@@ -42,17 +44,17 @@ public class ExecutionService {
         resultData.setPrice(userCarInputData.getPrice());
         resultData.setSanctionCar(isSanctionCar(userCarInputData.getPrice()));
         double fpir = calculateFirstCarPriceInRublesByUserCarData(userCarInputData);
-        BigDecimal firstPriceInRubles= new BigDecimal(fpir);
+        BigDecimal firstPriceInRubles = new BigDecimal(fpir);
         firstPriceInRubles = firstPriceInRubles.setScale(2, RoundingMode.DOWN);
         double firstPriceInRublesDouble = firstPriceInRubles.doubleValue();
-        double fprc = firstPriceInRublesDouble*0.99;
-        BigDecimal firstPriceRubCrypto= new BigDecimal(fprc);
+        double fprc = firstPriceInRublesDouble * 0.99;
+        BigDecimal firstPriceRubCrypto = new BigDecimal(fprc);
         firstPriceRubCrypto = firstPriceRubCrypto.setScale(2, RoundingMode.DOWN);
         double firstPriceRubCryptoDouble = firstPriceRubCrypto.doubleValue();
-        
+
         resultData.setFirstPriceInRubles(firstPriceInRublesDouble);
         resultData.setRubleCrypto(firstPriceRubCryptoDouble);
-        resultData.setFee(firstPriceInRublesDouble-firstPriceRubCryptoDouble);
+        resultData.setFee(firstPriceInRublesDouble - firstPriceRubCryptoDouble);
         if (!resultData.isSanctionCar()) {
             resultData.setFirstPriceInUsd(userCarInputData.getPrice() / restService.getCbrUsdKrwMinus20());
             resultData.setPaymentType("Инвойс");
@@ -79,23 +81,31 @@ public class ExecutionService {
     //Рубль крипта	Курс	Комиссия	Клиенты	Платежный способ	Тип выдачи
     private void appendLogGoogleData(CarPriceResultData carPriceResultData) {
         int currentIndex = googleService.getCurrentIndex(configDatapool.getLogSpreedSheetId());
-        System.out.println("число "+carPriceResultData.getFirstPriceInUsd());
 
-        
-        
+        log.info("""
+                        Добавляем данные:
+                        Цена авто {}
+                        Цена в USD {}
+                        Цена в рублях {}
+                        Рубль крипто {}
+                        USD/KRW  {}
+                        """, carPriceResultData.getPrice(), String.format("%.0f",
+                        Math.ceil(carPriceResultData.getFirstPriceInUsd())),
+                carPriceResultData.getFirstPriceInRubles(),
+                carPriceResultData.getRubleCrypto(), restService.getCbrUsdKrwMinus20());
+        int newIndex = currentIndex + 1;
         List<List<Object>> inputValues =
                 Arrays.asList(
-                        Arrays.asList(LocalDate.now().toString(), currentIndex + 1, "",
+                        Arrays.asList(LocalDate.now().toString(), "#" + newIndex, "",
                                 carPriceResultData.getPrice(),
-                                 String.format("%.0f",Math.ceil(carPriceResultData.getFirstPriceInUsd())),
+                                String.format("%.0f", Math.ceil(carPriceResultData.getFirstPriceInUsd())),
                                 carPriceResultData.getFirstPriceInRubles(),
                                 carPriceResultData.getRubleCrypto(),
                                 manualConversionRatesMapInRubles.get(KRW), carPriceResultData.getFee(),
-                                "KOREX", "", carPriceResultData.getPaymentType()));
-        
+                                "", "", carPriceResultData.getPaymentType()));
+
         try {
-            //  googleService.getValues(configDatapool.getLogSpreedsheetId());
-            googleService.appendValues(configDatapool.getLogSpreedSheetId(), "A1:L1", "USER_ENTERED",
+            googleService.appendValues(configDatapool.getLogSpreedSheetId(), "Заявки в Корею!A1:L1", "USER_ENTERED",
                     inputValues);
         } catch (IOException e) {
             throw new RuntimeException(e);

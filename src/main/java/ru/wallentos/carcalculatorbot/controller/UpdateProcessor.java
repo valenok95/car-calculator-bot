@@ -7,6 +7,7 @@ import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.TO_STAR
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.USD;
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.manualConversionRatesMapInRubles;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -64,8 +65,7 @@ public class UpdateProcessor {
         }
     }
 
-    public String processGoogle(){
-
+    public String processGoogle() {
         String CREDENTIALS_FILE_PATH = "/credentials.json";
         var in = UpdateProcessor.class.getResource(CREDENTIALS_FILE_PATH).getPath();
         log.info(in);

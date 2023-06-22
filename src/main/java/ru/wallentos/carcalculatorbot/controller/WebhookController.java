@@ -1,5 +1,6 @@
 package ru.wallentos.carcalculatorbot.controller;
 
+import java.io.IOException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,7 +23,7 @@ public class WebhookController {
     }
 
     @GetMapping("/mygoogle")
-    public ResponseEntity<?> credLocation() {
+    public ResponseEntity<?> credLocation()  {
         return ResponseEntity.accepted().body(updateProcessor.processGoogle());
     }
 }
