@@ -13,7 +13,7 @@ WORKDIR /app
 
 #CMD java $JAVA_OPTS -jar *.jar
 COPY  ./build/libs/*.jar .
-COPY  ./src/main/resources/credentials.json .
+COPY  ./credentials.json .
 
 ENTRYPOINT ["java","-jar","car-calculator-bot-0.0.1-SNAPSHOT.jar"]
 

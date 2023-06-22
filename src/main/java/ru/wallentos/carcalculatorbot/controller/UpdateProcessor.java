@@ -7,10 +7,7 @@ import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.TO_STAR
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.USD;
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.manualConversionRatesMapInRubles;
 
-import com.google.api.services.sheets.v4.model.AppendValuesResponse;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
