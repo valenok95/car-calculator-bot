@@ -13,6 +13,6 @@ WORKDIR /app
 COPY  ./buildtmp/*.jar .
 COPY  buildtmp/credentials.json .
 
-ENTRYPOINT ["java","-jar","*.jar"]
+ENTRYPOINT ["java","-jar","car-calculator-bot-0.0.1-SNAPSHOT.jar"]
 
 EXPOSE 8080
