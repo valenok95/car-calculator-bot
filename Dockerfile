@@ -16,4 +16,4 @@ COPY  buildtmp/credentials.json .
 ENTRYPOINT ["java","-jar","car-calculator-bot-0.0.1-SNAPSHOT.jar"]
 
 #EXPOSE 8080
-#EXPOSE 80
+EXPOSE 80
