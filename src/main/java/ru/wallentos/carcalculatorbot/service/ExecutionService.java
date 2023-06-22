@@ -5,6 +5,8 @@ import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.USD;
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.manualConversionRatesMapInRubles;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -39,10 +41,18 @@ public class ExecutionService {
         userCarInputData.setSanctionCar(isSanctionCar(userCarInputData.getPrice()));
         resultData.setPrice(userCarInputData.getPrice());
         resultData.setSanctionCar(isSanctionCar(userCarInputData.getPrice()));
-        double firstPriceInRubles = calculateFirstCarPriceInRublesByUserCarData(userCarInputData);
-        resultData.setFirstPriceInRubles(firstPriceInRubles);
-        resultData.setRubleCrypto(firstPriceInRubles * 0.99);
-        resultData.setFee(firstPriceInRubles * 0.01);
+        double fpir = calculateFirstCarPriceInRublesByUserCarData(userCarInputData);
+        BigDecimal firstPriceInRubles= new BigDecimal(fpir);
+        firstPriceInRubles = firstPriceInRubles.setScale(2, RoundingMode.DOWN);
+        double firstPriceInRublesDouble = firstPriceInRubles.doubleValue();
+        double fprc = firstPriceInRublesDouble*0.99;
+        BigDecimal firstPriceRubCrypto= new BigDecimal(fprc);
+        firstPriceRubCrypto = firstPriceRubCrypto.setScale(2, RoundingMode.DOWN);
+        double firstPriceRubCryptoDouble = firstPriceRubCrypto.doubleValue();
+        
+        resultData.setFirstPriceInRubles(firstPriceInRublesDouble);
+        resultData.setRubleCrypto(firstPriceRubCryptoDouble);
+        resultData.setFee(firstPriceInRublesDouble-firstPriceRubCryptoDouble);
         if (!resultData.isSanctionCar()) {
             resultData.setFirstPriceInUsd(userCarInputData.getPrice() / restService.getCbrUsdKrwMinus20());
             resultData.setPaymentType("Инвойс");
@@ -69,14 +79,20 @@ public class ExecutionService {
     //Рубль крипта	Курс	Комиссия	Клиенты	Платежный способ	Тип выдачи
     private void appendLogGoogleData(CarPriceResultData carPriceResultData) {
         int currentIndex = googleService.getCurrentIndex(configDatapool.getLogSpreedSheetId());
+        System.out.println("число "+carPriceResultData.getFirstPriceInUsd());
+
+        
+        
         List<List<Object>> inputValues =
                 Arrays.asList(
                         Arrays.asList(LocalDate.now().toString(), currentIndex + 1, "",
                                 carPriceResultData.getPrice(),
-                                carPriceResultData.getFirstPriceInUsd(),
-                                carPriceResultData.getFirstPriceInRubles(), carPriceResultData.getRubleCrypto(),
+                                 String.format("%.0f",Math.ceil(carPriceResultData.getFirstPriceInUsd())),
+                                carPriceResultData.getFirstPriceInRubles(),
+                                carPriceResultData.getRubleCrypto(),
                                 manualConversionRatesMapInRubles.get(KRW), carPriceResultData.getFee(),
                                 "KOREX", "", carPriceResultData.getPaymentType()));
+        
         try {
             //  googleService.getValues(configDatapool.getLogSpreedsheetId());
             googleService.appendValues(configDatapool.getLogSpreedSheetId(), "A1:L1", "USER_ENTERED",
