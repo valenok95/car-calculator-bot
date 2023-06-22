@@ -199,7 +199,6 @@ public class UpdateProcessor {
         BotState currentState = cache.getUsersCurrentBotState(chatId);
         switch (callbackData) {
             case TO_START_MESSAGE:
-            case RESET_MESSAGE:
                 startCommandReceived(update);
                 return;
             case TO_SET_CURRENCY_MENU:
