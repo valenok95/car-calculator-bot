@@ -43,18 +43,17 @@ public class ExecutionService {
         userCarInputData.setSanctionCar(isSanctionCar(userCarInputData.getPrice()));
         resultData.setPrice(userCarInputData.getPrice());
         resultData.setSanctionCar(isSanctionCar(userCarInputData.getPrice()));
-        double fpir = calculateFirstCarPriceInRublesByUserCarData(userCarInputData);
-        BigDecimal firstPriceInRubles = new BigDecimal(fpir);
+        double firstPriceInRublesRaw = calculateFirstCarPriceInRublesByUserCarData(userCarInputData);
+        BigDecimal firstPriceInRubles = new BigDecimal(firstPriceInRublesRaw);
         firstPriceInRubles = firstPriceInRubles.setScale(2, RoundingMode.DOWN);
         double firstPriceInRublesDouble = firstPriceInRubles.doubleValue();
-        double fprc = firstPriceInRublesDouble * 0.99;
-        BigDecimal firstPriceRubCrypto = new BigDecimal(fprc);
-        firstPriceRubCrypto = firstPriceRubCrypto.setScale(2, RoundingMode.DOWN);
-        double firstPriceRubCryptoDouble = firstPriceRubCrypto.doubleValue();
-
+        double firstPriceFeeRaw = firstPriceInRublesDouble * configDatapool.getFee();
+        BigDecimal firstPriceRubFee = new BigDecimal(firstPriceFeeRaw);
+        firstPriceRubFee = firstPriceRubFee.setScale(2, RoundingMode.UP);
+        double firstPriceFeeDouble = firstPriceRubFee.doubleValue();
+        resultData.setFee(firstPriceFeeDouble);
         resultData.setFirstPriceInRubles(firstPriceInRublesDouble);
-        resultData.setRubleCrypto(firstPriceRubCryptoDouble);
-        resultData.setFee(firstPriceInRublesDouble - firstPriceRubCryptoDouble);
+        resultData.setRubleCrypto(firstPriceInRublesDouble-firstPriceFeeDouble);
         if (!resultData.isSanctionCar()) {
             resultData.setFirstPriceInUsd(userCarInputData.getPrice() / restService.getCbrUsdKrwMinus20());
             resultData.setPaymentType("Инвойс");
