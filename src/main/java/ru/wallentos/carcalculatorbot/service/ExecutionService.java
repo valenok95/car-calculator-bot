@@ -1,6 +1,7 @@
 package ru.wallentos.carcalculatorbot.service;
 
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.KRW;
+import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.RUB;
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.USD;
 import static ru.wallentos.carcalculatorbot.configuration.ConfigDatapool.manualConversionRatesMapInRubles;
 
@@ -31,7 +32,7 @@ public class ExecutionService {
         this.googleService = googleService;
         this.configDatapool = configDatapool;
         restService.refreshExchangeRates();
-        double rub = restService.getConversionRatesMap().get("RUB");
+        double rub = restService.getConversionRatesMap().get(RUB);
         restService.getConversionRatesMap().forEach((key, value) -> {
             ConfigDatapool.manualConversionRatesMapInRubles.put(key,
                     rub / value);
@@ -53,7 +54,7 @@ public class ExecutionService {
         double firstPriceFeeDouble = firstPriceRubFee.doubleValue();
         resultData.setFee(firstPriceFeeDouble);
         resultData.setFirstPriceInRubles(firstPriceInRublesDouble);
-        resultData.setRubleCrypto(firstPriceInRublesDouble-firstPriceFeeDouble);
+        resultData.setRubleCrypto(firstPriceInRublesDouble - firstPriceFeeDouble);
         if (!resultData.isSanctionCar()) {
             resultData.setFirstPriceInUsd(userCarInputData.getPrice() / restService.getCbrUsdKrwMinus20());
             resultData.setPaymentType("Инвойс");

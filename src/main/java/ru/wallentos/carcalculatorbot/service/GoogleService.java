@@ -4,7 +4,6 @@ import com.google.api.client.googleapis.json.GoogleJsonError;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.AppendValuesResponse;
-import com.google.api.services.sheets.v4.model.BatchGetValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import java.io.IOException;
 import java.util.List;
@@ -47,7 +46,7 @@ public class GoogleService {
         }
         return result;
     }
-    
+
     /**
      * Returns a range of values from a spreadsheet.
      *
@@ -55,19 +54,23 @@ public class GoogleService {
      * @return Values in the range
      * @throws IOException - if credentials file not found.
      */
-    public int getCurrentIndex(String spreadsheetId)  {
+    public int getCurrentIndex(String spreadsheetId) {
         ValueRange result = null;
         try {
             // Gets the values of the cells in the specified range.
-            result = sheets.spreadsheets().values().get(spreadsheetId,"Заявки в Корею!B1:B").execute();
+            result = sheets.spreadsheets().values().get(spreadsheetId, "Заявки в Корею!B1:B").execute();
             int numRows = result.getValues().size();
-            return Integer.parseInt(result.getValues().get(numRows-1).get(0).toString().substring(1));
+            try {
+                return Integer.parseInt(result.getValues().get(numRows - 1).get(0).toString());
+            } catch (NumberFormatException e) {
+                return Integer.parseInt(result.getValues().get(numRows - 1).get(0).toString().substring(1));
+            }
         } catch (GoogleJsonResponseException e) {
             // TODO(developer) - handle error appropriately
             GoogleJsonError error = e.getDetails();
             if (error.getCode() == 404) {
                 System.out.printf("Spreadsheet not found with id '%s'.\n", spreadsheetId);
-            } 
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
